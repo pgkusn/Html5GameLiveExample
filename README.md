@@ -1,5 +1,5 @@
 # HTML5 Canvas 遊戲開發超入門
-![html5game](./assets/Mario.gif)
+![html5game](./finished/assets/Mario.gif)
 <p align=center>採用 Createjs + Animate cc 來開發一個小遊戲</p>
 
 - 線上展示 DEMO
