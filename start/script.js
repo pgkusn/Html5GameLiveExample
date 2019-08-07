@@ -29,35 +29,6 @@ function handleComplete(evt, comp) {
     exportRoot = new lib.Mario();
     stage = new lib.Stage(canvas);
 
-    // start
-    const SPEED = 10;
-    let position = 1;
-    let isKeyDown = false;
-    let user = new lib.User();
-    user.x = 350;
-    user.y = 352;
-    exportRoot.addChild(user);
-
-    document.addEventListener('keydown', e => {
-        if (isKeyDown) return;
-        if (e.keyCode === 39 || e.keyCode === 37) {
-            isKeyDown = true;
-            position = e.keyCode === 39 ? 1 : -1;
-            user.gotoAndPlay('run');
-        }
-    });
-
-    document.addEventListener('keyup', e => {
-        isKeyDown = false;
-        user.gotoAndPlay('stop');
-    });
-
-    createjs.Ticker.addEventListener('tick', () => {
-        if (!isKeyDown) return;
-        user.x += SPEED * position;
-        user.scaleX = position;
-    });
-
     //Registers the "tick" event listener.
     fnStartAnimation = function () {
         stage.addChild(exportRoot);
@@ -68,4 +39,91 @@ function handleComplete(evt, comp) {
     AdobeAn.makeResponsive(false, 'both', false, 1, [canvas, anim_container, dom_overlay_container]);
     AdobeAn.compositionLoaded(lib.properties.id);
     fnStartAnimation();
+
+    // =========================================================================
+    // main
+    // =========================================================================
+    let isStart = false;
+    let isKeyDown = false;
+    const SPEED = 10;
+    let position = 1;
+    let score = 0;
+    let attack = 10;
+    let hp = 100;
+
+    function keydownHandler(e) {
+        if (isKeyDown) return;
+        if (e.keyCode === 39 || e.keyCode === 37) {
+            isKeyDown = true;
+            position = e.keyCode === 39 ? 1 : -1;
+            user.gotoAndPlay('run');
+        }
+    }
+    function keyupHandler() {
+        isKeyDown = false;
+        user.gotoAndPlay('stop');
+    }
+
+    // 加入人物
+    let user = new lib.User();
+    user.x = 350;
+    user.y = 352;
+    exportRoot.addChild(user);
+
+    let timer = setInterval(() => {
+        if (!isStart) return;
+
+        // 加入金幣
+        let coin = new lib.Coin();
+        coin.x = Math.floor(Math.random() * (670 - 30 + 1)) + 30;
+        coin.y = -50;
+        exportRoot.addChildAt(coin, 1);
+
+        // 金幣動畫及碰撞偵測
+        createjs.Tween.get(coin).to({ y: 400 }, 2500)
+            .call(() => {
+                console.log('miss!');
+                exportRoot.removeChild(coin);
+                hp -= attack;
+                document.querySelector('.hp').style.width = `${hp}%`;
+            })
+            .addEventListener('change', () => {
+                let intersection = ndgmr.checkRectCollision(coin, user);
+                if (intersection) {
+                    createjs.Tween.removeTweens(coin);
+                    exportRoot.removeChild(coin);
+                    score++;
+                    document.querySelector('.winNum').textContent = score;
+                }
+            });
+    }, 1000);
+
+    // ticker
+    let tickFn = function () {
+        if (hp <= 0) {
+            user.gotoAndPlay('die');
+            document.querySelector('.over').style.display = 'flex';
+            createjs.Ticker.removeEventListener('tick', tickFn);
+            document.removeEventListener('keydown', keydownHandler);
+            document.removeEventListener('keyup', keyupHandler);
+            clearInterval(timer);
+        }
+        if (!isKeyDown) return;
+        user.x += SPEED * position;
+        user.scaleX = position;
+    }
+    createjs.Ticker.addEventListener('tick', tickFn);
+
+    // 遊戲開始
+    document.querySelector('.gamePlayBtn').addEventListener('click', function () {
+        isStart = true;
+        this.style.display = 'none';
+        document.addEventListener('keydown', keydownHandler);
+        document.addEventListener('keyup', keyupHandler);
+    });
+
+    // 重新開始
+    document.querySelector('.resetPlay').addEventListener('click', () => {
+        location.reload();
+    });
 }
