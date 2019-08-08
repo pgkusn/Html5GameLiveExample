@@ -43,13 +43,33 @@ function handleComplete(evt, comp) {
     // =========================================================================
     // main
     // =========================================================================
-    let isStart = false;
-    let isKeyDown = false;
     const SPEED = 10;
     let position = 1;
     let score = 0;
     let attack = 10;
     let hp = 100;
+    let isStart = false;
+    let isKeyDown = false;
+
+    // 載入聲音
+    let loadedFile = 0;
+    const SOUNDS = [
+        { src: "./assets/play.mp3", id: "play" },
+        { src: "./assets/coin.mp3", id: "coin" },
+        { src: "./assets/boom.mp3", id: "boom" },
+        { src: "./assets/bg.mp3", id: "bg" },
+    ];
+    createjs.Sound.alternateExtensions = ["mp3"];
+    createjs.Sound.on("fileload", () => {
+        loadedFile++;
+        if (loadedFile === SOUNDS.length) {
+            document.querySelector('.loading').style.display = 'none';
+            // 播放背景音樂
+            let instance = createjs.Sound.play("bg", { loop: -1 });
+            instance.volume = 0.1;
+        }
+    });
+    createjs.Sound.registerSounds(SOUNDS, "./");
 
     function keydownHandler(e) {
         if (isKeyDown) return;
@@ -59,6 +79,7 @@ function handleComplete(evt, comp) {
             user.gotoAndPlay('run');
         }
     }
+
     function keyupHandler() {
         isKeyDown = false;
         user.gotoAndPlay('stop');
@@ -94,12 +115,14 @@ function handleComplete(evt, comp) {
                     exportRoot.removeChild(coin);
                     score++;
                     document.querySelector('.winNum').textContent = score;
+                    createjs.Sound.play("coin");
                 }
             });
     }, 1000);
 
     // ticker
     let tickFn = function () {
+        // 遊戲結束
         if (hp <= 0) {
             user.gotoAndPlay('die');
             document.querySelector('.over').style.display = 'flex';
@@ -107,7 +130,10 @@ function handleComplete(evt, comp) {
             document.removeEventListener('keydown', keydownHandler);
             document.removeEventListener('keyup', keyupHandler);
             clearInterval(timer);
+            createjs.Sound.play("boom");
         }
+
+        // 人物移動
         if (!isKeyDown) return;
         user.x += SPEED * position;
         user.scaleX = position;
@@ -120,6 +146,7 @@ function handleComplete(evt, comp) {
         this.style.display = 'none';
         document.addEventListener('keydown', keydownHandler);
         document.addEventListener('keyup', keyupHandler);
+        createjs.Sound.play("play");
     });
 
     // 重新開始
