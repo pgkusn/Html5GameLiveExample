@@ -12,4 +12,4 @@
     - https://www.youtube.com/c/ChengMike
 
 - 直播影片
-    -https://www.youtube.com/watch?v=IHyBVK7tvhY
+    - https://www.youtube.com/watch?v=IHyBVK7tvhY
